@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat con Socket.IO</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background-color: #fafafa;
+    }
+
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background-image: url('https://stories.infobae.com/wp-content/uploads/2022/03/patron-4-novedades-que-llegan-a-WhatsApp.png'); /* Cambia 'fondo.jpg' por tu imagen */
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #chat .message-container {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    #chat .message {
+      max-width: 70%;
+      padding: 12px;
+      border-radius: 15px;
+      word-wrap: break-word;
+      font-size: 14px;
+      position: relative;
+      background-color: #fff;
+      margin-left: 10px;
+      display: inline-block;
+    }
+
+    #chat .sent {
+      align-self: flex-end;
+      margin-left: auto;
+      margin-right: 0;
+    }
+
+    #chat .sent .message {
+      background-color: #dcf8c6;
+    }
+
+    #chat .received {
+      align-self: flex-start;
+      margin-right: auto;
+      margin-left: 0;
+    }
+
+    #chat .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #007bff;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    #chat .username {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+      font-size: 13px;
+    }
+
+    #form {
+      display: flex;
+      padding: 12px;
+      background-color: #fff;
+      border-top: 1px solid #ccc;
+    }
+
+    #username {
+      margin-right: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      margin-right: 10px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="chat"></div>
+  <form id="form">
+    <input id="username" type="text" placeholder="Tu nombre" required />
+    <input id="input" type="text" autocomplete="off" placeholder="Escribe tu mensaje..." />
+    <button>Enviar</button>
+  </form>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const usernameInput = document.getElementById('username');
+    const chat = document.getElementById('chat');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = usernameInput.value.trim();
+      const message = input.value.trim();
+      if (username && message) {
+        // Enviar mensaje al servidor
+        socket.emit('chat message', { user: username, text: message });
+        input.value = '';
+      }
+    });
+
+    // Recibir mensaje del servidor
+    socket.on('chat message', (data) => {
+      const { user, text } = data;
+      const username = usernameInput.value.trim();
+
+      // Crear contenedor del mensaje
+      const messageContainer = document.createElement('div');
+      messageContainer.classList.add('message-container');
+
+      // Crear avatar
+      const avatar = document.createElement('div');
+      avatar.classList.add('avatar');
+      avatar.textContent = user[0]; // Tomar la primera letra del nombre
+
+      // Crear mensaje
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message');
+
+      const usernameElement = document.createElement('span');
+      usernameElement.classList.add('username');
+      usernameElement.textContent = user;
+
+      const textElement = document.createElement('span');
+      textElement.textContent = text;
+
+      messageElement.appendChild(usernameElement);
+      messageElement.appendChild(textElement);
+
+      // Determinar si es enviado o recibido
+      if (user === username) {
+        messageContainer.classList.add('sent');
+      } else {
+        messageContainer.classList.add('received');
+      }
+
+      // Agregar elementos al contenedor del mensaje
+      messageContainer.appendChild(avatar);
+      messageContainer.appendChild(messageElement);
+
+      // Agregar contenedor al chat
+      chat.appendChild(messageContainer);
+      chat.scrollTop = chat.scrollHeight; // Desplazar hacia abajo
+    });
+  </script>
+</body>
+
+</html>
+
